@@ -1,0 +1,101 @@
+<!doctype html>
+<!--
+  Copyright (c) 2026 Tomohiko Ariki
+  Licensed under the MIT License. See LICENSE file in the project root for details.
+-->
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>カットアップメーカー</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;700;800&family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=DotGothic16&display=swap"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="board">
+      <header class="masthead">
+        <h1 class="ransom-title" aria-label="カットアップメーカー">
+          <span class="scrap f-a">カ</span><span class="scrap f-b">ッ</span
+          ><span class="scrap f-c">ト</span><span class="scrap f-b">ア</span
+          ><span class="scrap f-a">ッ</span><span class="scrap f-c">プ</span
+          ><span class="scrap f-b">メ</span><span class="scrap f-a">ー</span
+          ><span class="scrap f-c">カ</span><span class="scrap f-b">ー</span>
+        </h1>
+        <p class="eyebrow">文章を、切って、混ぜて、貼りなおす。</p>
+        <p class="lead">
+          複数の文章からカットアップ技法で新しい文章を生成します。対応言語は日本語のみです。
+        </p>
+      </header>
+
+      <main>
+        <section id="text-inputs" class="desk-section">
+          <h2 class="tab-label">元テキスト</h2>
+          <div id="text-input-list" class="scrap-stack"></div>
+          <div class="input-controls">
+            <button type="button" id="add-text-btn" class="ghost-btn">+ テキストを追加</button>
+            <label class="file-btn" for="file-input">.txtを貼る</label>
+            <input
+              type="file"
+              id="file-input"
+              accept=".txt"
+              multiple
+              class="visually-hidden"
+            />
+          </div>
+          <div id="file-preview-list" class="scrap-stack"></div>
+        </section>
+
+        <section id="params" class="desk-section">
+          <h2 class="tab-label">生成パラメータ<span class="meta">(任意)</span></h2>
+          <div class="paper-card">
+            <div class="param-row">
+              <label class="param-field">
+                <span>語数上限</span>
+                <input type="number" id="max-words-input" min="1" max="5000" placeholder="1000" />
+              </label>
+              <label class="param-field">
+                <span>連鎖の長さ</span>
+                <input type="number" id="chain-length-input" min="1" max="5" placeholder="2" />
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div class="cut-line" role="presentation">
+          <svg class="scissors" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="6" cy="6" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <circle cx="6" cy="18" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="M7.8 7.6 L20 18 M7.8 16.4 L20 6"
+              stroke="currentColor"
+              stroke-width="1.6"
+              fill="none"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="generate-btn" class="cut-btn">生成する</button>
+          <button type="button" id="regenerate-btn" class="ghost-btn" disabled>再生成</button>
+        </div>
+
+        <section id="result-section" class="desk-section">
+          <h2 class="tab-label">生成結果</h2>
+          <div class="paper-card">
+            <div id="loading" class="loading-strip" hidden><span>切り取り中…</span></div>
+            <div id="error-message" class="error-strip" hidden></div>
+            <pre id="result-text" class="result-paper"></pre>
+          </div>
+          <button type="button" id="copy-btn" class="ghost-btn" disabled>結果をコピー</button>
+        </section>
+      </main>
+    </div>
+    <script src="/main.js"></script>
+  </body>
+</html>
