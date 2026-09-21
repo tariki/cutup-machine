@@ -9,6 +9,7 @@ const fileInput = document.getElementById('file-input');
 const filePreviewList = document.getElementById('file-preview-list');
 const maxWordsInput = document.getElementById('max-words-input');
 const chainLengthInput = document.getElementById('chain-length-input');
+const resetBtn = document.getElementById('reset-btn');
 const generateBtn = document.getElementById('generate-btn');
 const regenerateBtn = document.getElementById('regenerate-btn');
 const loadingEl = document.getElementById('loading');
@@ -137,8 +138,27 @@ function buildRequestBody() {
   return body;
 }
 
+function resetInputs() {
+  // テキスト入力欄をページ読み込み時と同じ状態(空欄1つ)に戻す
+  textInputList.innerHTML = '';
+  addTextArea();
+
+  // アップロード済みファイルをクリアする
+  uploadedFiles.length = 0;
+  renderFilePreviews();
+  fileInput.value = '';
+
+  // 生成結果・エラー表示もクリアする
+  resultTextEl.textContent = '';
+  copyBtn.disabled = true;
+  regenerateBtn.disabled = true;
+  lastRequestBody = null;
+  clearError();
+}
+
 addTextBtn.addEventListener('click', addTextArea);
 fileInput.addEventListener('change', handleFileInputChange);
+resetBtn.addEventListener('click', resetInputs);
 
 generateBtn.addEventListener('click', () => {
   const body = buildRequestBody();

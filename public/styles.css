@@ -375,6 +375,20 @@ button,
   cursor: not-allowed;
 }
 
+/* リセットは破壊的操作のため、他の操作ボタンより控えめな文字リンク風にする */
+.reset-btn {
+  background: transparent;
+  border: none;
+  color: var(--pencil);
+  text-decoration: underline dashed;
+  text-underline-offset: 0.2em;
+  padding: 0.65em 0.3em;
+}
+
+.reset-btn:hover {
+  color: var(--cut);
+}
+
 .file-preview button {
   background: transparent;
   color: var(--cut);
