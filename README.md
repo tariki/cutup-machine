@@ -8,6 +8,7 @@
 - `docs/repository-structure.md` - リポジトリ構造定義書
 - `docs/development-guidelines.md` - 開発ガイドライン
 - `docs/glossary.md` - 用語集
+- `CHANGELOG.md` - 変更履歴
 
 ## セットアップ
 
