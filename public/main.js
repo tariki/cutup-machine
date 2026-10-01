@@ -20,6 +20,49 @@ const copyBtn = document.getElementById('copy-btn');
 // (docs/functional-design.mdのセッション設計を参照。KPI集計目的のみで、サーバー側に永続化はされない)
 const sessionId = crypto.randomUUID();
 
+// 「生成中」状態を維持する最短時間(ms)。効果音の再生が一瞬で終わらないようにする
+// (docs/functional-design.mdの「効果音」セクションを参照)
+const MIN_GENERATING_DURATION_MS = 800;
+
+// docs/functional-design.mdのSoundEffectPlayer(HTMLAudioElementベース)の実装。
+// コンストラクタ相当の処理も含めて例外を外に漏らさず、失敗時はno-opとして振る舞う
+// (音声非対応環境・自動再生制限下でも生成処理自体は継続させるため)
+function createSoundEffectPlayer(src) {
+  let audio;
+  try {
+    audio = new Audio(src);
+    audio.loop = true;
+  } catch {
+    return { start() {}, stop() {} };
+  }
+
+  return {
+    start() {
+      try {
+        audio.currentTime = 0;
+        audio.play()?.catch(() => {});
+      } catch {
+        // play()が同期的に例外を投げる非標準環境でも生成処理には影響させない
+      }
+    },
+    stop() {
+      audio.pause();
+      audio.currentTime = 0;
+    },
+  };
+}
+
+const soundEffectPlayer = createSoundEffectPlayer('/sounds/cut.wav');
+
+// 処理開始時刻(startedAt)からの経過時間がminimumMs未満であれば、残り時間分待機する
+function waitForMinimumDuration(startedAt, minimumMs) {
+  const remaining = minimumMs - (performance.now() - startedAt);
+  if (remaining <= 0) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => setTimeout(resolve, remaining));
+}
+
 // ファイルアップロードで読み込んだテキストを保持する(テキストエリアとは別に管理する)
 const uploadedFiles = [];
 
@@ -87,10 +130,12 @@ function clearError() {
 }
 
 async function requestGeneration(body) {
+  const startedAt = performance.now();
   loadingEl.hidden = false;
   clearError();
   resultTextEl.textContent = '';
   copyBtn.disabled = true;
+  soundEffectPlayer.start();
 
   try {
     const response = await fetch('/api/generate', {
@@ -103,6 +148,7 @@ async function requestGeneration(body) {
     });
 
     const data = await response.json();
+    await waitForMinimumDuration(startedAt, MIN_GENERATING_DURATION_MS);
 
     if (!response.ok) {
       showError(data.message ?? '生成中にエラーが発生しました');
@@ -114,8 +160,10 @@ async function requestGeneration(body) {
     regenerateBtn.disabled = false;
     lastRequestBody = body;
   } catch {
+    await waitForMinimumDuration(startedAt, MIN_GENERATING_DURATION_MS);
     showError('通信エラーが発生しました');
   } finally {
+    soundEffectPlayer.stop();
     loadingEl.hidden = true;
   }
 }

@@ -12,6 +12,7 @@ import { createDocsRoute } from './routes/docs.js';
 import { RateLimiter } from './middleware/rateLimiter.js';
 import { RateLimitError } from './middleware/RateLimitError.js';
 import { requestSizeLimit } from './middleware/requestSizeLimit.js';
+import { wavContentType } from './middleware/wavContentType.js';
 import type { GenerationError } from '../types/generation.js';
 
 export function createApp(tokenizer: Tokenizer): Hono {
@@ -23,6 +24,7 @@ export function createApp(tokenizer: Tokenizer): Hono {
   app.route('/api/generate', createGenerateRoute(tokenizer));
   app.route('/api/docs', createDocsRoute());
 
+  app.use('/sounds/*', wavContentType());
   app.use('/*', serveStatic({ root: './public' }));
 
   // ルートハンドラの外(ミドルウェア)でスローされたエラーはここで一括してHTTPレスポンスに変換する

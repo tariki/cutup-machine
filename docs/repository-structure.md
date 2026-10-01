@@ -45,6 +45,7 @@ cutup-machine/
 - `routes/docs.ts`: `GET /api/docs`のハンドラ(API仕様のドキュメント公開。`docs/functional-design.md`のAPIドキュメントを参照)
 - `middleware/rateLimiter.ts`: 送信元IP単位のレート制限
 - `middleware/requestSizeLimit.ts`: リクエストボディサイズの上限チェック
+- `middleware/wavContentType.ts`: `/sounds/*`配下の`.wav`ファイルのContent-Type補正(`serveStatic`が`.wav`のMIMEタイプを認識しないため)
 
 **命名規則**:
 - ルートファイル: 対応するリソース名(camelCase) + `.ts`(例: `generate.ts`)
@@ -62,7 +63,8 @@ api/
 │   └── generate.ts
 └── middleware/
     ├── rateLimiter.ts
-    └── requestSizeLimit.ts
+    ├── requestSizeLimit.ts
+    └── wavContentType.ts
 ```
 
 ### src/domain/ (ドメインレイヤー)
