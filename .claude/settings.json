@@ -3,6 +3,7 @@
     "DISABLE_AUTOUPDATER": "1"
   },
   "permissions": {
+    "defaultMode": "manual",
     "allow": [
       "Skill(prd-writing)",
       "Skill(functional-design)",
