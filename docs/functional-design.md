@@ -39,6 +39,7 @@ Web UIとAPI直接呼び出しは同一のAPIサーバー(`POST /api/generate`)�
 | バリデーション | zod | `GenerationRequest`のスキーマ検証(RequestValidatorを参照) |
 | レート制限 | ミドルウェア(例: 送信元IP単位のトークンバケット) | 認証なし公開APIの濫用防止(PRD非機能要件) |
 | 効果音再生 | ブラウザ標準の`HTMLAudioElement`(`<audio>`) | 追加ライブラリ不要でループ再生・停止を制御できるため(PRD「生成時の効果音」要件) |
+| 実行ファイル化 | Node.js SEA(Single Executable Applications)+ `postject` | Node.js公式機能で追加ランタイム依存なしに単一実行ファイルを生成できるため(PRD「ローカル実行用スタンドアロン実行ファイルの配布」要件)。対象はLinux(glibc系)のみ |
 | テスト | Vitest | 既存プロジェクトに導入済み |
 
 ## データモデル定義
@@ -194,6 +195,33 @@ class RateLimiter {
 
 **依存関係**: なし(サーバープロセス内のメモリ上でカウント。将来的な複数インスタンス構成では外部ストア(Redis等)への置き換えを検討)
 
+### Launcher
+
+**責務**:
+- SEA実行ファイルとして起動されたかどうかを判定する
+- SEA実行時のみ、埋め込まれたkuromoji辞書アセットをOSの一時ディレクトリに展開し、`Tokenizer.initialize()`に渡す`dicPath`を差し替える(通常の`npm run dev`/`npm start`実行時は`node_modules/kuromoji/dict`をそのまま使うため不要)
+- 既定ポート(3000)が使用中の場合、空いているポートを順に探す
+- サーバーがリッスンを開始したら、既定のブラウザで`http://localhost:<port>`を自動的に開く
+
+**インターフェース**:
+```typescript
+class Launcher {
+  // SEA実行ファイルとして起動されているかを判定する(node:seaモジュールのisSea()を使用)
+  static isPackaged(): boolean;
+
+  // SEA実行時のみ呼び出す。埋め込み辞書アセットを一時ディレクトリに展開しそのパスを返す
+  static extractBundledDictionary(): Promise<string>;
+
+  // 指定ポートが使用中の場合、空いているポートを順に探して返す
+  static findAvailablePort(preferred: number): Promise<number>;
+
+  // 既定のブラウザでURLを開く。失敗しても例外は投げず、コンソールにURLを表示するのみに留める
+  static openBrowser(url: string): void;
+}
+```
+
+**依存関係**: Node.js標準モジュール(`node:sea`/`node:net`/`node:child_process`/`node:fs`)のみ。追加ライブラリの導入は不要
+
 ## ユースケース図
 
 ### Web画面からの文章生成
@@ -331,7 +359,7 @@ function buildChain(tokenLists: string[][], chainLength: number): MarkovChain {
   for (const tokens of tokenLists) {
     const padded = [...Array(chainLength).fill(NONWORD), ...tokens, NONWORD];
     for (let i = 0; i <= padded.length - chainLength - 1; i++) {
-      const key = padded.slice(i, i + chainLength).join(' ');
+      const key = padded.slice(i, i + chainLength).join(' ');
       const next = padded[i + chainLength];
       const candidates = chain.get(key) ?? [];
       candidates.push(next);
@@ -352,7 +380,7 @@ function generate(chain: MarkovChain, chainLength: number, maxWords: number): st
   const result: string[] = [];
 
   for (let i = 0; i < maxWords; i++) {
-    const key = state.join(' ');
+    const key = state.join(' ');
     const candidates = chain.get(key);
     if (!candidates || candidates.length === 0) break;
 
@@ -453,6 +481,24 @@ function withMinimumDuration<T>(promise: Promise<T>, minimumMs: number): Promise
 | ファイルサイズ超過 | 413を返し処理を中断 | "アップロードできるファイルサイズを超えています" |
 | レート制限超過 | 429を返し処理を中断 | "リクエストが多すぎます。しばらく待ってから再度お試しください" |
 | 形態素解析・生成処理の予期しないエラー | 500を返し処理を中断、詳細はログにのみ出力 | "生成中にエラーが発生しました。時間をおいて再度お試しください" |
+
+## ローカル実行ファイル化(SEA)
+
+**目的**: PRDの「ローカル実行用スタンドアロン実行ファイルの配布」要件を実現する。Node.jsのSingle Executable Applications(SEA)機能を使い、Node.js本体のインストールなしに単一ファイルとして配布・実行できるようにする。
+
+**対象プラットフォーム**: Linux(glibc系、x86_64・aarch64)のみ。SEAは対象OS/アーキテクチャ用の公式Nodeバイナリへ生成済みのblobを注入する方式のため、プラットフォームごとに対応するNodeバイナリが必要になる(Windows・macOS対応はPRD上も当面スコープ外)。
+
+**ビルド手順**:
+1. `npm run build`でTypeScriptをコンパイルする(既存のビルドステップ)
+2. `node --experimental-sea-config sea-config.json`で、コンパイル済みエントリポイントと埋め込みアセット(後述の辞書データ)からblobを生成する
+3. 対象プラットフォーム用のNode.js本体を用意する(ビルド環境と同一アーキテクチャ向けはそのまま、別アーキテクチャ向けはnodejs.org公式配布物を取得する)
+4. `postject`でそのNode本体にblobを注入し、単一実行ファイルを生成する
+
+**辞書データ(kuromoji)の扱い**: kuromojiは辞書ファイル(`node_modules/kuromoji/dict/*.dat.gz`、約17MB)をファイルシステムパス経由で読み込む実装のため、そのままではSEA化できない。`sea-config.json`の`assets`機能でこれらのファイルをblobに埋め込み、起動時に`Launcher.extractBundledDictionary()`(コンポーネント設計を参照)がOSの一時ディレクトリに展開してから、そのパスを`Tokenizer.initialize(dicPath)`に渡す。通常の`npm run dev`/`npm start`実行時はこの展開処理をスキップし、従来通り`node_modules/kuromoji/dict`を直接参照する(`Launcher.isPackaged()`で判定する)。
+
+**ポートとブラウザの自動起動**: デフォルトポート(3000)が使用中の場合、`Launcher.findAvailablePort()`が空いているポートを順に探す。サーバーがリッスンを開始したら、`Launcher.openBrowser()`がLinuxの`xdg-open`コマンドを呼び出し、既定のブラウザで`http://localhost:<port>`を開く。`xdg-open`が存在しない環境では、起動したURLをコンソールに表示するのみに留め、エラーにはしない。
+
+**依存ライブラリ**: 追加ライブラリの導入は不要。SEA・`postject`はビルド時のみ使用するdevDependencyであり、実行ファイル自体はNode標準機能のみで構成する。
 
 ## テスト戦略
 

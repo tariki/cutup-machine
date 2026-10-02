@@ -308,6 +308,33 @@ npm run dev
 
 **ESLint設定とフロントエンド(`public/`)対応**: 現在の`eslint.config.js`はTypeScript(`src/`配下)向けの設定のみで、ブラウザ環境のグローバル変数(`document`/`fetch`等)が未定義のため`no-undef`エラーとなる。`repository-structure.md`が定義する`public/main.js`(素のJavaScriptフロントエンド)を実装する際は、`globals`パッケージ等を使い`public/**/*.js`に`languageOptions.globals.browser`を設定するオーバーライドを`eslint.config.js`に追加してから着手する(追加しないまま実装すると`npm run lint`がPR必須チェックとして通らなくなる)。
 
+### ローカル実行ファイル化(SEA)のビルド
+
+PRDの「ローカル実行用スタンドアロン実行ファイルの配布」要件に対応するビルド手順(`docs/architecture.md`の「ローカル実行ファイル化のアーキテクチャ」を参照)。対象はLinux(glibc系)のみで、現時点ではCIに組み込まず手動実行とする。
+
+実機検証の結果、SEAの`main`エントリはCommonJSとして実行されるため、本プロジェクトのESM構成(`tsc`の複数ファイル出力)をそのまま渡すことはできない。esbuildで単一のCJSバンドルに変換するステップ(`npm run build:sea:bundle`)を必ず経由する。
+
+```bash
+# 1. esbuildで単一のCJSバンドルを生成する(TypeScriptの変換も兼ねる)
+npm run build:sea:bundle
+
+# 2. SEA用blobの生成(sea-config.jsonに基づき、kuromoji辞書をassetsとして埋め込む)
+npm run build:sea:config
+
+# 3. ビルド環境と同一アーキテクチャ向け: 現在のNodeバイナリをコピー
+cp $(command -v node) cutup-machine
+
+# 4. postjectでblobを注入
+npx postject cutup-machine NODE_SEA_BLOB dist-sea/sea-prep.blob \
+  --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+
+# 5. 実行権限を付与して動作確認
+chmod +x cutup-machine
+./cutup-machine
+```
+
+別アーキテクチャ(例: ビルド環境がaarch64でx86_64向けに作りたい場合)向けには、ステップ3で`nodejs.org`の公式配布物から対象アーキテクチャのNodeバイナリを取得して使う。ステップ3以降(Nodeバイナリのコピー・`postject`注入・`chmod`)はプラットフォームごとの対象バイナリ選定が絡むため、現時点ではnpm scriptにまとめず手順として残す。
+
 **Pre-commitフック**: Husky + lint-staged が導入済み(`package.json`の`lint-staged`設定)。コミット時にステージされたファイルへ自動でESLint/Prettierが適用される。`.husky/pre-commit`はまだ作成されていないため、実装着手時に以下を追加する:
 
 ```bash

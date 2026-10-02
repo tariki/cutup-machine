@@ -14,6 +14,7 @@ export default defineConfig({
       exclude: [
         'node_modules/**',
         'dist/**',
+        'dist-sea/**', // SEAビルド成果物(esbuildバンドル等)。dist/と同様にカバレッジ対象外とする
         '.steering/**',
         '**/*.config.{ts,js}',
         '**/types/**',

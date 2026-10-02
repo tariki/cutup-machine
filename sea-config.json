@@ -1,0 +1,19 @@
+{
+  "main": "dist-sea/bundle.cjs",
+  "output": "dist-sea/sea-prep.blob",
+  "disableExperimentalSEAWarning": true,
+  "assets": {
+    "dict/base.dat.gz": "node_modules/kuromoji/dict/base.dat.gz",
+    "dict/cc.dat.gz": "node_modules/kuromoji/dict/cc.dat.gz",
+    "dict/check.dat.gz": "node_modules/kuromoji/dict/check.dat.gz",
+    "dict/tid.dat.gz": "node_modules/kuromoji/dict/tid.dat.gz",
+    "dict/tid_map.dat.gz": "node_modules/kuromoji/dict/tid_map.dat.gz",
+    "dict/tid_pos.dat.gz": "node_modules/kuromoji/dict/tid_pos.dat.gz",
+    "dict/unk.dat.gz": "node_modules/kuromoji/dict/unk.dat.gz",
+    "dict/unk_char.dat.gz": "node_modules/kuromoji/dict/unk_char.dat.gz",
+    "dict/unk_compat.dat.gz": "node_modules/kuromoji/dict/unk_compat.dat.gz",
+    "dict/unk_invoke.dat.gz": "node_modules/kuromoji/dict/unk_invoke.dat.gz",
+    "dict/unk_map.dat.gz": "node_modules/kuromoji/dict/unk_map.dat.gz",
+    "dict/unk_pos.dat.gz": "node_modules/kuromoji/dict/unk_pos.dat.gz"
+  }
+}

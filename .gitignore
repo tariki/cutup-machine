@@ -9,8 +9,12 @@ yarn-error.log*
 
 # Build outputs
 dist/
+dist-sea/
 build/
 *.tsbuildinfo
+
+# SEA実行ファイル(ローカルビルドの成果物、プラットフォーム依存のバイナリ)
+/cutup-machine
 
 # Environment variables
 .env

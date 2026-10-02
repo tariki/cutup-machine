@@ -15,7 +15,8 @@ cutup-machine/
 │   │   └── validation/
 │   ├── config/                 # 定数・設定値
 │   ├── types/                  # 型定義
-│   └── index.ts                # エントリーポイント(サーバー起動)
+│   ├── index.ts                # エントリーポイント(サーバー起動)
+│   └── launcher.ts             # SEA実行ファイル向けの起動前処理(ポート選定・辞書展開・ブラウザ自動起動)
 ├── public/                     # 静的フロントエンド(ビルド不要な素のHTML/CSS/JS)
 │   ├── index.html
 │   ├── main.js
@@ -28,10 +29,14 @@ cutup-machine/
 │   └── ideas/                  # 壁打ち・技術調査メモ
 │       └── reference/          # 参考実装(main.rb, markov.rb)
 ├── .steering/                  # 作業単位のステアリングファイル
-└── .claude/                    # Claude Code設定
+├── .claude/                    # Claude Code設定
+├── sea-config.json             # Node.js SEA(Single Executable Applications)のビルド設定
+└── dist-sea/                   # SEAビルドの成果物(esbuildバンドル・blob)。.gitignore対象
 ```
 
 テンプレートでは`config/`(環境設定用)・`scripts/`(ビルド・デプロイ用)をリポジトリルート直下に置くが、本プロジェクトでは`config/`はリクエストパラメータの上限値などアプリケーション内定数を一元管理する狭い用途のため、ルート直下ではなく実装レイヤーの一部として`src/config/`に配置する。`scripts/`はビルド・デプロイ用の独自スクリプトを持たない(`package.json`の`scripts`で完結する)ため作成しない。
+
+`sea-config.json`は、`tsconfig.json`・`eslint.config.js`と同様にツール(Node.js SEA)が規定する固定ファイル名のため、他の設定ファイルと同じくリポジトリルート直下に配置する(`docs/architecture.md`の「ローカル実行ファイル化のアーキテクチャ」を参照)。
 
 ## ディレクトリ詳細
 
@@ -113,13 +118,29 @@ api/
 ### src/index.ts (エントリーポイント)
 
 **役割**: サーバー起動シーケンスの実行。以下の順序で処理する:
-1. `Tokenizer.initialize()`を呼び出し、kuromoji辞書の読み込みを完了させる(`docs/functional-design.md`のパフォーマンス最適化を参照。辞書読み込みはリクエストごとに行わない)
-2. `RateLimiter`等のミドルウェアと`app.ts`で組み立てたHonoアプリケーションを結び付ける
-3. Honoアプリケーションのlistenを開始する
+1. `Launcher.isPackaged()`でSEA実行ファイルかどうかを判定し、SEA実行時のみ`Launcher.extractBundledDictionary()`で辞書を展開して`dicPath`を差し替える(通常実行時は既定の`node_modules/kuromoji/dict`をそのまま使う)
+2. `Tokenizer.initialize(dicPath)`を呼び出し、kuromoji辞書の読み込みを完了させる(`docs/functional-design.md`のパフォーマンス最適化を参照。辞書読み込みはリクエストごとに行わない)
+3. `RateLimiter`等のミドルウェアと`app.ts`で組み立てたHonoアプリケーションを結び付ける
+4. `Launcher.findAvailablePort()`でリッスンするポートを決定し、Honoアプリケーションのlistenを開始する
+5. SEA実行時のみ`Launcher.openBrowser()`で既定のブラウザを自動的に開く
 
 **依存関係**:
-- 依存可能: `api/`, `domain/`(`Tokenizer`の初期化呼び出しのため)
+- 依存可能: `api/`, `domain/`(`Tokenizer`の初期化呼び出しのため)、`launcher.ts`
 - 依存禁止: `public/`
+
+### src/launcher.ts (SEA起動前処理)
+
+**役割**: SEA実行ファイルとしての起動かどうかの判定、辞書アセットの展開、ポート選定、ブラウザ自動起動を行う(`docs/functional-design.md`の`Launcher`コンポーネント設計を参照)。通常の`npm run dev`/`npm start`実行時は各処理がno-op相当として振る舞う
+
+**配置ファイル**:
+- `launcher.ts`: 上記4つの責務をまとめたユーティリティ関数群
+
+**命名規則**:
+- 単一ファイルのユーティリティ群のため、ディレクトリ化はせず`src/`直下にcamelCaseで配置する(`domain/`配下のような「1機能1ディレクトリ」構成は、サブモジュールに分割するほどの規模になった場合に検討する)
+
+**依存関係**:
+- 依存可能: Node.js標準モジュール(`node:sea`/`node:net`/`node:child_process`/`node:fs`/`node:os`)のみ
+- 依存禁止: `api/`, `domain/`, `public/`(起動前処理のみを担い、アプリケーションロジックには関与しない)
 
 ### public/ (静的フロントエンド)
 
@@ -187,6 +208,7 @@ tests/integration/
 | ミドルウェア | `src/api/middleware/` | 役割名.ts(camelCase) | `rateLimiter.ts` |
 | ドメインロジック(クラス) | `src/domain/<機能>/` | PascalCase.ts | `MarkovChainBuilder.ts` |
 | 型定義 | `src/types/` | 対象名.ts(camelCase) | `generation.ts` |
+| SEA起動前処理 | `src/`直下 | `launcher.ts`固定 | `launcher.ts` |
 | 定数 | `src/config/` | 対象名.ts(camelCase) | `limits.ts` |
 
 ### テストファイル
