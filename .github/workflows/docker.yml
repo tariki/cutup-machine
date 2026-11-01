@@ -1,0 +1,47 @@
+name: Docker
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'public/**'
+      - '.github/workflows/docker.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'src/**'
+      - 'public/**'
+      - '.github/workflows/docker.yml'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: イメージをビルド
+        run: docker build -t cutup-machine .
+      - name: コンテナを起動
+        run: docker run -d --name cutup-machine -p 3000:3000 cutup-machine
+      - name: 起動完了を待機
+        run: timeout 30 bash -c 'until curl -sf http://localhost:3000 >/dev/null; do sleep 1; done'
+      - name: /api/generateの動作確認
+        run: |
+          curl -sf -X POST http://localhost:3000/api/generate \
+            -H "Content-Type: application/json" \
+            -d '{"texts":["吾輩は猫である。名前はまだ無い。"]}' | grep -q '"text"'
+      - name: コンテナログ(失敗時の調査用)
+        if: failure()
+        run: docker logs cutup-machine
+      - name: コンテナを停止
+        if: always()
+        run: docker rm -f cutup-machine

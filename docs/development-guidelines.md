@@ -180,8 +180,10 @@ main (常にデプロイ可能な状態)
 | `npm run test` | ○ | ○ | ○ |
 | `npm run build` | ○ | ○ | ○ |
 | PRタイトルの形式(`pr-title.yml`) | - | ○ | - |
-| Dockerイメージのビルド・起動確認 | ○(導入後) | 導入後に追加予定 | 導入後に追加予定 |
+| Dockerイメージのビルド・起動確認 | ○(Docker/Podmanが使える環境の場合) | ○(`docker.yml`。Dockerfile・src・public等の変更時のみ実行) | ○(`docker.yml`) |
 | ホスティング先決定後のデプロイ | - | - | 別ワークフロー(`deploy.yml`、ホスティング先決定後に作成) |
+
+**注記**: この開発環境(Dev Container)はネストしたコンテナ実行(Docker・Podmanいずれも)に必要なカーネル機能(cgroup書き込み・namespace操作)が許可されておらず、手元でのDockerビルド・起動確認ができない。そのため`docker.yml`によるCI確認が主な検証手段になっている(`.steering/20261101-docker-image/`の実装記録を参照)。
 
 ### Dependabotの運用
 
@@ -365,6 +367,20 @@ chmod +x cutup-machine
 ```
 
 別アーキテクチャ(例: ビルド環境がaarch64でx86_64向けに作りたい場合)向けには、ステップ3で`nodejs.org`の公式配布物から対象アーキテクチャのNodeバイナリを取得して使う。ステップ3以降(Nodeバイナリのコピー・`postject`注入・`chmod`)はプラットフォームごとの対象バイナリ選定が絡むため、現時点ではnpm scriptにまとめず手順として残す。
+
+### Dockerイメージのビルド・ローカル起動
+
+公開ホスティング向けの配布形態(`docs/architecture.md`の「コンテナ化(Docker)」を参照)。具体的なホスティング先は未決定のため、ここではローカルでのビルド・起動確認の手順のみを示す。
+
+```bash
+# 1. イメージをビルドする
+docker build -t cutup-machine .
+
+# 2. ローカルでコンテナを起動する(ホスト側の3000番ポートに公開)
+docker run --rm -p 3000:3000 cutup-machine
+```
+
+起動後、ブラウザで`http://localhost:3000`を開いて動作確認する。SEA実行ファイル化と異なり、kuromoji辞書の埋め込み・展開処理は不要(`npm install`の結果として自然に`node_modules`に含まれる)。
 
 **Pre-commitフック**: Husky + lint-staged が導入済み(`package.json`の`lint-staged`設定)。コミット時にステージされたファイルへ自動でESLint/Prettierが適用される。`.husky/pre-commit`はまだ作成されていないため、実装着手時に以下を追加する:
 

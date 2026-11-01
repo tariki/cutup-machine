@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-sea
+.git
+.github
+.steering
+.claude
+.devcontainer
+.husky
+tests
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+cutup-machine
+sea-config.json
