@@ -20,7 +20,9 @@ cutup-machine/
 ├── public/                     # 静的フロントエンド(ビルド不要な素のHTML/CSS/JS)
 │   ├── index.html
 │   ├── main.js
-│   └── styles.css
+│   ├── styles.css
+│   └── sounds/
+│       └── cut.wav             # 生成時の効果音(docs/functional-design.mdの「効果音」を参照)
 ├── tests/                      # テストコード
 │   ├── unit/                   # ユニットテスト
 │   ├── integration/            # 統合テスト
@@ -150,6 +152,7 @@ api/
 - `index.html`: 入力フォームと結果表示エリア
 - `main.js`: `/api/generate`の呼び出しとDOM操作
 - `styles.css`: スタイル
+- `sounds/cut.wav`: 生成時の効果音(`docs/functional-design.md`の「効果音」を参照)
 
 **依存関係**:
 - 依存可能: `api/`の公開エンドポイント(HTTP経由のみ)
@@ -298,7 +301,7 @@ api/ (APIレイヤー) ───────┬──→ domain/ (ドメイン�
 既存の設定ファイルをそのまま踏襲する(新規追加なし)。
 
 ### .gitignore(既存)
-`node_modules/`, `dist/`, `build/`, `.env*`, `logs/`, `coverage/`, `.steering/*`(`.gitkeep`を除く)など
+`node_modules/`, `dist/`, `dist-sea/`, `/cutup-machine`(SEA実行ファイル), `build/`, `.env*`, `logs/`, `coverage/`, `.steering/*`(`.gitkeep`を除く)など
 
 ### .prettierignore(既存)
 `.claude/`, `.steering/`, `docs/`, `node_modules/`, `dist/`

@@ -37,7 +37,7 @@ Web UIとAPI直接呼び出しは同一のAPIサーバー(`POST /api/generate`)�
 | 形態素解析 | kuromoji | 純粋JavaScript実装で、MeCab等のネイティブバイナリ・辞書インストールが不要 |
 | データベース | なし | 入力・生成結果を永続化しない要件のため不要 |
 | バリデーション | zod | `GenerationRequest`のスキーマ検証(RequestValidatorを参照) |
-| レート制限 | ミドルウェア(例: 送信元IP単位のトークンバケット) | 認証なし公開APIの濫用防止(PRD非機能要件) |
+| レート制限 | ミドルウェア(送信元IP単位の固定ウィンドウ方式。`src/api/middleware/rateLimiter.ts`を参照) | 認証なし公開APIの濫用防止(PRD非機能要件) |
 | 効果音再生 | ブラウザ標準の`HTMLAudioElement`(`<audio>`) | 追加ライブラリ不要でループ再生・停止を制御できるため(PRD「生成時の効果音」要件) |
 | 実行ファイル化 | Node.js SEA(Single Executable Applications)+ `postject` | Node.js公式機能で追加ランタイム依存なしに単一実行ファイルを生成できるため(PRD「ローカル実行用スタンドアロン実行ファイルの配布」要件)。対象はLinux(glibc系)のみ |
 | テスト | Vitest | 既存プロジェクトに導入済み |
@@ -489,8 +489,8 @@ function withMinimumDuration<T>(promise: Promise<T>, minimumMs: number): Promise
 **対象プラットフォーム**: Linux(glibc系、x86_64・aarch64)のみ。SEAは対象OS/アーキテクチャ用の公式Nodeバイナリへ生成済みのblobを注入する方式のため、プラットフォームごとに対応するNodeバイナリが必要になる(Windows・macOS対応はPRD上も当面スコープ外)。
 
 **ビルド手順**:
-1. `npm run build`でTypeScriptをコンパイルする(既存のビルドステップ)
-2. `node --experimental-sea-config sea-config.json`で、コンパイル済みエントリポイントと埋め込みアセット(後述の辞書データ)からblobを生成する
+1. esbuildで`src/index.ts`を単一のCJSバンドル(`dist-sea/bundle.cjs`)に変換する(`npm run build:sea:bundle`)。SEAの`main`エントリはCommonJSとして実行されるため、本プロジェクトのESM構成(複数ファイル)をそのまま渡すと`SyntaxError: Cannot use import statement outside a module`になる(実機検証済み)。esbuildがTypeScriptの変換も兼ねるため、別途`tsc`を経由する必要はない(型チェックは`npm run typecheck`で別途行う)
+2. `node --experimental-sea-config sea-config.json`で、バンドルと埋め込みアセット(後述の辞書データ)からblobを生成する(`npm run build:sea:config`)
 3. 対象プラットフォーム用のNode.js本体を用意する(ビルド環境と同一アーキテクチャ向けはそのまま、別アーキテクチャ向けはnodejs.org公式配布物を取得する)
 4. `postject`でそのNode本体にblobを注入し、単一実行ファイルを生成する
 

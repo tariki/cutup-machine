@@ -183,6 +183,13 @@ main (常にデプロイ可能な状態)
 | Dockerイメージのビルド・起動確認 | ○(導入後) | 導入後に追加予定 | 導入後に追加予定 |
 | ホスティング先決定後のデプロイ | - | - | 別ワークフロー(`deploy.yml`、ホスティング先決定後に作成) |
 
+### Dependabotの運用
+
+`.github/dependabot.yml`により、npm・GitHub Actionsの依存関係更新PRが週次で作成される。
+
+- パッチ・マイナーバージョンの更新: 通常のPRと同様に扱い、`ci.yml`が通ればセルフマージしてよい
+- メジャーバージョンの更新: 破壊的変更を含む可能性があるため、変更内容(リリースノート)を確認したうえでマージするかを判断する
+
 ### コミットメッセージ規約(Conventional Commits)
 
 ```
@@ -214,7 +221,7 @@ Closes #12
 - [ ] `npm run test`が通る
 - [ ] `npm run build`が通る
 
-**PRテンプレート**:
+**PRテンプレート**(`.github/pull_request_template.md`、実ファイルと同期させる):
 ```markdown
 ## 変更内容
 [何を変更したか]
@@ -226,6 +233,9 @@ Closes #12
 - [ ] ユニットテスト追加
 - [ ] 統合テスト追加
 - [ ] 手動確認実施
+
+## ドキュメント
+- [ ] docs/の更新は不要 / 更新した(ファイル名: )
 
 ## 関連Issue
 Closes #[番号]
@@ -279,9 +289,9 @@ describe('RequestValidator', () => {
 
 ## コードレビュー基準
 
-**運用ルール**:
-- マージには最低1名の承認を必須とする(セルフマージ禁止)
-- レビュアーが不在で承認を得られない場合は、レビューが可能になるまでマージを待つ。プロジェクト規模上レビュアーが1名しかいない期間が生じる場合は、セルフレビュー(「作成前のチェック」のセルフレビュー実施)の記録をPRに残した上でマージしてよいと合意できたときのみ例外とする
+**運用ルール**(「GitHubのブランチ保護設定」の必要承認数と対応):
+- 開発者が1人の間は、CIが通ればセルフマージしてよい(「作成前のチェック」のセルフレビューを実施した上で)
+- 開発者が2人以上になったら、ブランチ保護設定の必要承認数を1以上に変更し、最低1名の承認を必須とする(セルフマージ禁止)
 
 **レビューポイント**:
 - 機能性: PRDの受け入れ条件を満たしているか、エッジケース(空入力、上限値ちょうど)が考慮されているか
@@ -364,23 +374,8 @@ npx lint-staged
 npm run typecheck
 ```
 
-**CI/CD**: 現時点で`.github/workflows/`は未作成。実装着手時に以下の内容でCIを追加することを推奨する:
+**CI/CD**: `.github/workflows/`に導入済み(詳細は「Git運用ルール」の「GitHubのブランチ保護設定」「手元の確認とCIの分担」を参照)。
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run build
-```
+- `ci.yml`: PR作成時・`main`へのpush時に`npm ci`→lint→typecheck→test→buildを実行する
+- `pr-title.yml`: PRタイトルがConventional Commits形式であることを検査する(squash mergeのためPRタイトル=コミットメッセージになる)
+- `dependabot.yml`: npm・GitHub Actionsの依存関係更新PRを週次で作成する(「Dependabotの運用」を参照)
