@@ -180,10 +180,10 @@ main (常にデプロイ可能な状態)
 | `npm run test` | ○ | ○ | ○ |
 | `npm run build` | ○ | ○ | ○ |
 | PRタイトルの形式(`pr-title.yml`) | - | ○ | - |
-| Dockerイメージのビルド・起動確認 | ○(Docker/Podmanが使える環境の場合) | ○(`docker.yml`。Dockerfile・src・public等の変更時のみ実行) | ○(`docker.yml`) |
+| Dockerイメージのビルド・起動確認 | ○(Docker/Podmanが使える環境の場合) | ○(`docker.yml`。イメージの中身に関わるファイル(`Dockerfile`・`.dockerignore`・`package.json`・`package-lock.json`・`tsconfig.json`・`src/`・`public/`・`docker.yml`)を変更したときのみ実行) | ○(`docker.yml`。常に実行) |
 | ホスティング先決定後のデプロイ | - | - | 別ワークフロー(`deploy.yml`、ホスティング先決定後に作成) |
 
-**注記**: この開発環境(Dev Container)はネストしたコンテナ実行(Docker・Podmanいずれも)に必要なカーネル機能(cgroup書き込み・namespace操作)が許可されておらず、手元でのDockerビルド・起動確認ができない。そのため`docker.yml`によるCI確認が主な検証手段になっている(`.steering/20261101-docker-image/`の実装記録を参照)。
+**注記**: この開発環境(Dev Container)はネストしたコンテナ実行(Docker・Podmanいずれも)に必要なカーネル機能(cgroup書き込み・namespace操作)が許可されておらず、手元でのDockerビルド・起動確認ができない。そのため`docker.yml`によるCI確認が主な検証手段になっている(`.steering/20261101-docker-image/`の実装記録を参照)。`docker.yml`はGitHubのActions画面から手動実行(`workflow_dispatch`)もできる。なお`docker`ジョブはPRではパス条件付きで実行されるため、ブランチ保護の必須チェックには含めない(対象外のPRではジョブが実行されず、必須チェックが保留のままになってマージできなくなるため)。
 
 ### Dependabotの運用
 
