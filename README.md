@@ -2,6 +2,8 @@
 
 複数の文章からカットアップ技法(マーコフ連鎖による単語単位の再構成)で新しい文章を生成するWebアプリです。詳細は `docs/` 配下のドキュメントを参照してください。
 
+![2つの元テキストから文章を生成したWeb UIの画面](docs/images/screenshot.png)
+
 - `docs/product-requirements.md` - プロダクト要求定義書
 - `docs/functional-design.md` - 機能設計書
 - `docs/architecture.md` - アーキテクチャ設計書
@@ -18,6 +20,20 @@ npm run dev
 ```
 
 サーバー起動後、ブラウザで `http://localhost:3000` を開くとWeb UIが使えます。
+
+## Docker
+
+Dockerイメージとしてビルド・起動することもできます。
+
+```bash
+# 1. イメージをビルドする
+docker build -t cutup-machine .
+
+# 2. コンテナを起動する(ホスト側の3000番ポートに公開)
+docker run --rm -p 3000:3000 cutup-machine
+```
+
+起動後、ブラウザで `http://localhost:3000` を開くとWeb UIが使えます。イメージの構成は `docs/architecture.md` の「コンテナ化(Docker)」を参照してください。
 
 ## スタンドアロン実行ファイル(Linux)
 

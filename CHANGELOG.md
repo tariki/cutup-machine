@@ -2,6 +2,10 @@
 
 このプロジェクトの変更履歴を記録します。[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/) の形式に準拠します。
 
+## 0.4.0
+
+- Dockerイメージ化を実装(マルチステージビルド、`node:24-alpine`ベース。`docker build`・`docker run`でWeb UIとAPIを起動できる)
+
 ## 0.3.0
 
 - ローカル実行用スタンドアロン実行ファイル(Node.js SEA)の配布を実装(Linux向け。Node.js/npmのインストール不要、辞書データ同梱、ポート自動選択、ブラウザ自動起動)

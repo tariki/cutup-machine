@@ -28,6 +28,7 @@ cutup-machine/
 │   ├── integration/            # 統合テスト
 │   └── e2e/                    # E2Eテスト(現時点では未使用)
 ├── docs/                       # プロジェクトドキュメント
+│   ├── images/                 # READMEなどで使う画像(スクリーンショット)
 │   └── ideas/                  # 壁打ち・技術調査メモ
 │       └── reference/          # 参考実装(main.rb, markov.rb)
 ├── .steering/                  # 作業単位のステアリングファイル
@@ -201,6 +202,7 @@ tests/integration/
 ### docs/ (ドキュメントディレクトリ)
 
 **配置ドキュメント**:
+- `images/`: READMEなどで使う画像(`screenshot.png`: Web UIのスクリーンショット)
 - `ideas/`: 壁打ち・技術調査メモ
 - `ideas/reference/`: 参考実装(`main.rb`/`markov.rb`)
 - `product-requirements.md`: プロダクト要求定義書
