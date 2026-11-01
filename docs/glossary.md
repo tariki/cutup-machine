@@ -149,7 +149,7 @@ const request: GenerationRequest = { texts: ['...'], chainLength: 2 };
 
 **本プロジェクトでの用途**: ユニットテスト・統合テストの実行、カバレッジ計測
 
-**バージョン**: ^2.0.0(既存プロジェクトに導入済み)
+**バージョン**: ^5.0.5(`@vitest/coverage-v8`・`@vitest/ui`も同じバージョンに揃える)
 
 **関連コンポーネント**: `RequestValidator`、`Tokenizer`、`MarkovChainBuilder`、`MarkovGenerator`(いずれもユニットテスト対象)
 

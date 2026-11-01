@@ -20,4 +20,8 @@ describe('Tokenizer', () => {
 
     expect(tokens).toEqual([]);
   });
+
+  it('辞書が読み込めない場合はinitializeが失敗する', async () => {
+    await expect(Tokenizer.initialize('not-exist/kuromoji/dict')).rejects.toThrow();
+  });
 });
