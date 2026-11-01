@@ -13,15 +13,7 @@ on:
       - '.github/workflows/docker.yml'
   push:
     branches: [main]
-    paths:
-      - 'Dockerfile'
-      - '.dockerignore'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.json'
-      - 'src/**'
-      - 'public/**'
-      - '.github/workflows/docker.yml'
+  workflow_dispatch:
 
 jobs:
   docker:
