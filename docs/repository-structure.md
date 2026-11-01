@@ -174,11 +174,14 @@ api/
 **構造**:
 ```
 tests/unit/
-└── domain/
-    ├── tokenizer/Tokenizer.test.ts
-    ├── markov/MarkovChainBuilder.test.ts
-    ├── markov/MarkovGenerator.test.ts
-    └── validation/RequestValidator.test.ts
+├── domain/
+│   ├── tokenizer/Tokenizer.test.ts
+│   ├── markov/MarkovChainBuilder.test.ts
+│   ├── markov/MarkovGenerator.test.ts
+│   └── validation/RequestValidator.test.ts
+├── api/
+│   └── middleware/rateLimiter.test.ts
+└── launcher.test.ts
 ```
 
 #### integration/

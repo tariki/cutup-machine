@@ -4,7 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # 実行環境のNode.jsのメジャーバージョン(24)に型定義を合わせるため、メジャー更新は手動で行う
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
+      # vitest本体とプラグインはpeer依存関係でバージョンが揃っている必要があるため、メジャー更新もまとめる
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
       production-dependencies:
         dependency-type: "production"
         update-types: ["minor", "patch"]
