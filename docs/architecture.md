@@ -170,6 +170,41 @@ macOS(特にApple Silicon)はOSレベルでのコード署名(最低限アドホ
 - `src/index.ts`のサーバー起動シーケンスに、Launcher(`docs/functional-design.md`のコンポーネント設計を参照)によるポート選定・辞書展開・ブラウザ自動起動の前処理が追加される
 - 通常の`npm run dev`/`npm start`実行時の挙動には影響しない(Launcherの追加処理はSEA実行時のみ有効化される)
 
+## コンテナ化(Docker)
+
+### 目的
+
+公開ホスティングのための配布形態として、Dockerイメージ化を行う。SEA実行ファイル化(前節)が「Node.js未インストールのローカル環境での実行」を解決するのに対し、コンテナ化は「クラウド上でのホスティング」を解決する手段であり、両者は別の配布チャネルとして併存する。
+
+### ホスティング先との関係
+
+具体的なホスティング先(Cloud Run等)は本書執筆時点では未決定。本節ではホスティング先に依存しない、汎用的なDockerイメージの構成方針のみを定める。ホスティング先が決まった段階で、そのプラットフォーム固有の設定(例: リバースプロキシが付与する`X-Forwarded-For`の信頼境界の実機確認、インスタンススケーリング方針)を別途追記する。
+
+### ビルド方式
+
+マルチステージビルドを採用する。
+
+1. **buildステージ**: `npm ci`で全依存関係(devDependencies含む)をインストールし、`npm run build`でTypeScriptをコンパイルする
+2. **runtimeステージ**: `npm ci --omit=dev`で本番依存関係のみをインストールし、buildステージの`dist/`と`public/`をコピーする
+
+本番イメージにはTypeScriptコンパイラ等のビルドツールを含めず、イメージサイズを抑える。
+
+### ベースイメージ
+
+`node:24-alpine`を採用する。本プロジェクトの依存関係(Hono、kuromoji、zod、`@hono/node-server`)はすべて純粋JavaScript実装でネイティブバイナリを持たない(`docs/functional-design.md`の技術スタック表を参照)ため、Alpine(musl libc)固有の非互換が生じるリスクがなく、Debianベースの`slim`系より軽量な点を優先する。
+
+### kuromoji辞書の扱い
+
+SEA実行ファイル化のときのような特別な埋め込み・展開処理は不要である。kuromoji辞書(`node_modules/kuromoji/dict/`、約17MB)は`npm install`の結果として`node_modules`に自然に含まれるため、runtimeステージで本番依存関係をインストールする際にそのまま付随する。
+
+### ポート設定
+
+既存の`src/index.ts`が`process.env.PORT`を読む実装になっているため、コンテナ化にあたっての変更は不要である。Dockerfileでは`ENV PORT=3000`を既定値として設定し、`EXPOSE 3000`を記述する。
+
+### ローカルでの確認方法
+
+`docker build`・`docker run`でローカルにイメージをビルド・起動し、動作確認できるようにする(ホスティング先を問わず共通の確認手段)。具体的なコマンドは`docs/development-guidelines.md`を参照。
+
 ## テスト戦略
 
 ### ユニットテスト

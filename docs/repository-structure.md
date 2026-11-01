@@ -32,13 +32,19 @@ cutup-machine/
 │       └── reference/          # 参考実装(main.rb, markov.rb)
 ├── .steering/                  # 作業単位のステアリングファイル
 ├── .claude/                    # Claude Code設定
+├── .github/                    # GitHub Actionsワークフロー・Dependabot設定・PRテンプレート
+│   └── workflows/
 ├── sea-config.json             # Node.js SEA(Single Executable Applications)のビルド設定
-└── dist-sea/                   # SEAビルドの成果物(esbuildバンドル・blob)。.gitignore対象
+├── dist-sea/                   # SEAビルドの成果物(esbuildバンドル・blob)。.gitignore対象
+├── Dockerfile                  # コンテナイメージのビルド定義(マルチステージビルド)
+└── .dockerignore               # コンテナイメージに含めないファイルの指定
 ```
 
 テンプレートでは`config/`(環境設定用)・`scripts/`(ビルド・デプロイ用)をリポジトリルート直下に置くが、本プロジェクトでは`config/`はリクエストパラメータの上限値などアプリケーション内定数を一元管理する狭い用途のため、ルート直下ではなく実装レイヤーの一部として`src/config/`に配置する。`scripts/`はビルド・デプロイ用の独自スクリプトを持たない(`package.json`の`scripts`で完結する)ため作成しない。
 
 `sea-config.json`は、`tsconfig.json`・`eslint.config.js`と同様にツール(Node.js SEA)が規定する固定ファイル名のため、他の設定ファイルと同じくリポジトリルート直下に配置する(`docs/architecture.md`の「ローカル実行ファイル化のアーキテクチャ」を参照)。
+
+`Dockerfile`・`.dockerignore`も同様に、Dockerが規定する固定ファイル名のためリポジトリルート直下に配置する(`docs/architecture.md`の「コンテナ化(Docker)」を参照)。`.github/workflows/`はGitHub Actionsが参照するディレクトリ構造上、この位置に固定される。
 
 ## ディレクトリ詳細
 
