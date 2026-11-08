@@ -26,8 +26,8 @@
   "author": "Tomohiko Ariki",
   "license": "MIT",
   "dependencies": {
-    "@hono/node-server": "^2.1.5",
-    "hono": "^4.13.14",
+    "@hono/node-server": "^2.1.6",
+    "hono": "^4.13.16",
     "kuromoji": "^0.1.2",
     "zod": "^4.6.7"
   },
